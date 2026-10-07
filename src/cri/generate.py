@@ -217,6 +217,8 @@ def generate_synthetic_reviews(n_reviews: int = 5000, seed: int = 42) -> pd.Data
             "rating": float(rating),
             "review_date": review_date,
             "stay_date": stay_date,
+            "primary_aspect": primary_aspect,
+            "polarity": polarity,
         })
 
     df = pd.DataFrame(records)
