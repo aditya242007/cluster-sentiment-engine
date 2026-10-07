@@ -24,13 +24,13 @@ class Classifier(ABC):
             text: Raw or normalized review text.
 
         Returns:
-            Dict[str, Dict[str, Any]]: Aspect classification results dictionary keyed by aspect name.
+            Dict keyed by aspect name containing sentiment, score, matched_phrases, review_count.
         """
         pass
 
 
 class RuleBasedClassifier(Classifier):
-    """Explainable rule/lexicon-based aspect sentiment classifier inheriting from Classifier."""
+    """Explainable rule/lexicon-based aspect sentiment classifier."""
 
     def __init__(self, aspects_path: str = "src/cri/resources/aspects.yaml"):
         """Load aspect taxonomy and cue phrases from YAML configuration.
@@ -49,84 +49,66 @@ class RuleBasedClassifier(Classifier):
             data = yaml.safe_load(f)
 
         self.aspects: List[Dict[str, Any]] = data.get("aspects", [])
-        self._compiled_rules: Dict[str, Dict[str, List[str]]] = {}
-
-        for aspect in self.aspects:
-            name = aspect["name"]
-            pos_phrases: List[str] = []
-            neg_phrases: List[str] = []
-
-            for lang, phrases in aspect.get("cue_phrases", {}).items():
-                for phrase in phrases:
-                    if phrase.startswith("POS:"):
-                        clean_p = normalize_text(phrase[4:].strip())
-                        if clean_p:
-                            pos_phrases.append(clean_p)
-                    elif phrase.startswith("NEG:"):
-                        clean_p = normalize_text(phrase[4:].strip())
-                        if clean_p:
-                            neg_phrases.append(clean_p)
-
-            self._compiled_rules[name] = {
-                "positive": sorted(set(pos_phrases), key=len, reverse=True),
-                "negative": sorted(set(neg_phrases), key=len, reverse=True),
-            }
 
     def classify(self, text: str) -> Dict[str, Dict[str, Any]]:
-        """Classify review text across 8 aspects, computing sentiment and matched cue phrases.
+        """Classify review text across all aspects using direct phrase matching.
+
+        Matches positive and negative cue phrases from english, hinglish, and devanagari
+        sub-keys. Score is (pos - neg) / total, ranging from -1.0 to +1.0.
 
         Args:
             text: Raw or normalized review text.
 
         Returns:
-            Dict[str, Dict[str, Any]]: Mapping of aspect name to sentiment result:
-              {
-                "sentiment": "positive" | "negative" | "neutral",
-                "score": float,
-                "matched_phrases": list of matched cue phrases
-              }
+            Dict keyed by aspect name with keys: sentiment, score, matched_phrases, review_count.
         """
-        norm_text = normalize_text(text)
+        normalized = normalize_text(text).lower()
         results: Dict[str, Dict[str, Any]] = {}
 
         for aspect in self.aspects:
             name = aspect["name"]
-            pos_cues = self._compiled_rules[name]["positive"]
-            neg_cues = self._compiled_rules[name]["negative"]
+            cues = aspect.get("cue_phrases", {})
 
-            matched_pos: List[str] = []
-            matched_neg: List[str] = []
+            pos_matches: List[str] = []
+            neg_matches: List[str] = []
 
-            for cue in pos_cues:
-                if cue in norm_text:
-                    matched_pos.append(cue)
+            for phrase in cues.get("english_pos", []):
+                if phrase.lower() in normalized:
+                    pos_matches.append(phrase)
+            for phrase in cues.get("english_neg", []):
+                if phrase.lower() in normalized:
+                    neg_matches.append(phrase)
+            for phrase in cues.get("hinglish_pos", []):
+                if phrase.lower() in normalized:
+                    pos_matches.append(phrase)
+            for phrase in cues.get("hinglish_neg", []):
+                if phrase.lower() in normalized:
+                    neg_matches.append(phrase)
+            # Devanagari phrases are matched against original text (not lowercased normalized)
+            original_lower = text.lower()
+            for phrase in cues.get("devanagari_pos", []):
+                if phrase in text:
+                    pos_matches.append(phrase)
+            for phrase in cues.get("devanagari_neg", []):
+                if phrase in text:
+                    neg_matches.append(phrase)
 
-            for cue in neg_cues:
-                if cue in norm_text:
-                    matched_neg.append(cue)
+            pos = len(pos_matches)
+            neg = len(neg_matches)
+            total = pos + neg
 
-            pos_count = len(matched_pos)
-            neg_count = len(matched_neg)
-            total_matches = pos_count + neg_count
-
-            if total_matches == 0:
+            if total == 0:
                 score = 0.0
                 sentiment = "neutral"
             else:
-                score = float((pos_count - neg_count) / max(1, total_matches))
-                if score > 0.1:
-                    sentiment = "positive"
-                elif score < -0.1:
-                    sentiment = "negative"
-                else:
-                    sentiment = "neutral"
-
-            all_matched = matched_pos + matched_neg
+                score = (pos - neg) / total
+                sentiment = "positive" if score > 0.15 else ("negative" if score < -0.15 else "neutral")
 
             results[name] = {
                 "sentiment": sentiment,
                 "score": score,
-                "matched_phrases": all_matched,
+                "matched_phrases": pos_matches + [f"-{m}" for m in neg_matches],
+                "review_count": total,
             }
 
         return results
@@ -136,6 +118,7 @@ if __name__ == "__main__":
     classifier = RuleBasedClassifier()
 
     sample_reviews = [
+        "The food was excellent and the room was dirty",
         "Khana bahut lajawab aur tasty tha, loved the breakfast buffet! But room was freezing cold.",
         "कमरा बहुत साफ और आरामदायक था, staff was polite and helpful.",
         "Rude staff with zero manners, overpriced property, totally paisa barbad.",

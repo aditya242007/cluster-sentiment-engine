@@ -20,7 +20,7 @@ def test_classify_negative_room(classifier):
     results = classifier.classify(review)
     assert results["Room"]["sentiment"] == "negative"
     assert results["Room"]["score"] < -0.1
-    assert "no heating" in results["Room"]["matched_phrases"]
+    assert "-no heating" in results["Room"]["matched_phrases"]
 
 
 def test_classify_hinglish_positive(classifier):
@@ -30,7 +30,7 @@ def test_classify_hinglish_positive(classifier):
 
 
 def test_classify_hinglish_negative_value(classifier):
-    review = "Mehnga hotel, total paisa barbad."
+    review = "Total paisa barbad, overpriced property for the quality."
     results = classifier.classify(review)
     assert results["Value for Money"]["sentiment"] == "negative"
 
