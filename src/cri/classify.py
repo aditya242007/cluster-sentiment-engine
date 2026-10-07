@@ -1,3 +1,11 @@
+"""Module defining the pluggable Classifier interface and rule-based classifier implementation.
+
+Future transformer-based backends (e.g., fine-tuned mBERT, XLM-RoBERTa) or hybrid model backends
+can implement the abstract `Classifier` interface, allowing seamless swapping of aspect-sentiment
+engine models without modifying downstream analytics or dashboard components.
+"""
+
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, List
 import yaml
@@ -5,8 +13,24 @@ import yaml
 from src.cri.normalize import normalize_text
 
 
-class RuleBasedClassifier:
-    """Explainable rule/lexicon-based aspect sentiment classifier."""
+class Classifier(ABC):
+    """Abstract base class establishing the pluggable contract for aspect classifiers."""
+
+    @abstractmethod
+    def classify(self, text: str) -> Dict[str, Dict[str, Any]]:
+        """Classify input review text across aspects.
+
+        Args:
+            text: Raw or normalized review text.
+
+        Returns:
+            Dict[str, Dict[str, Any]]: Aspect classification results dictionary keyed by aspect name.
+        """
+        pass
+
+
+class RuleBasedClassifier(Classifier):
+    """Explainable rule/lexicon-based aspect sentiment classifier inheriting from Classifier."""
 
     def __init__(self, aspects_path: str = "src/cri/resources/aspects.yaml"):
         """Load aspect taxonomy and cue phrases from YAML configuration.
