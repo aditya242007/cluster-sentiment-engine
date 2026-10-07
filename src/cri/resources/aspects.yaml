@@ -20,6 +20,8 @@ aspects:
         - "food was amazing"
         - "food was tasty"
         - "food was fresh"
+        - "food was delicious and fresh"
+        - "delicious and fresh"
         - "breakfast was amazing"
         - "local cuisine"
         - "great breakfast"
@@ -27,6 +29,8 @@ aspects:
         - "buffet"
         - "dinner thali"
         - "shandar quality"
+        - "khana bahut accha"
+        - "amazing breakfast"
       english_neg:
         - "cold food"
         - "stale food"
@@ -44,6 +48,10 @@ aspects:
         - "unhygienic restaurant"
         - "food was bad"
         - "food kharab"
+        - "cold and tasteless"
+        - "poor breakfast"
+        - "bad taste"
+        - "stale items"
       hinglish_pos:
         - "khana accha"
         - "khaana accha"
@@ -100,6 +108,9 @@ aspects:
         - "clean linens"
         - "breathtaking view"
         - "room aesthetics"
+        - "spacious and clean room"
+        - "clean room"
+        - "well maintained"
       english_neg:
         - "freezing cold room"
         - "no heating"
@@ -114,6 +125,9 @@ aspects:
         - "room was terrible"
         - "cold room"
         - "room was damp"
+        - "dirty and cramped"
+        - "poorly maintained room"
+        - "needs repair"
       hinglish_pos:
         - "cozy tha"
         - "room badhiya"
@@ -164,6 +178,9 @@ aspects:
         - "supportive"
         - "welcoming"
         - "helpful at every step"
+        - "very helpful and polite"
+        - "staff was very helpful"
+        - "friendly staff"
       english_neg:
         - "rude staff"
         - "unhelpful staff"
@@ -177,6 +194,9 @@ aspects:
         - "poor hospitality"
         - "staff was bad"
         - "no help"
+        - "rude and unhelpful"
+        - "slow and unfriendly"
+        - "staff behavior was disappointing"
       hinglish_pos:
         - "staff accha"
         - "helpful staff"
