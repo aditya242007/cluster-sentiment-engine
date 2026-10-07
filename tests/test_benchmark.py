@@ -6,9 +6,11 @@ import pytest
 import pandas as pd
 from scipy import stats
 
+from src.cri.benchmark import generate_action_report
 from src.cri.generate import generate_synthetic_reviews
 from src.cri.normalize import normalize_text
 from src.cri.classify import RuleBasedClassifier
+
 
 
 @pytest.fixture(scope="module")
@@ -177,3 +179,34 @@ def test_p4_staff_improvement_significant(scored_df):
         f"[Pattern 3 FAILED] P4 Staff improvement months 4+ ({late_mean:.4f}) vs "
         f"months 1-3 ({early_mean:.4f}) is not significant. p-value={p_value:.4f}"
     )
+
+
+# ── Action Report Generator Tests ─────────────────────────────────────────────
+
+def test_generate_action_report_formatting():
+    """Verify generate_action_report returns plain-text output matching expected terminal format."""
+    benchmark_res = {
+        "property_id": "P1",
+        "cluster_id": "C1",
+        "aspect": "Food",
+        "property_score": 2.6,
+        "cluster_mean": 3.8,
+        "gap": -1.2,
+        "flag": "Lag",
+        "classification": "property-specific",
+        "changepoint": "2025-03-14 (decline)",
+    }
+
+    report = generate_action_report(benchmark_res)
+
+    assert "ACTION REPORT" in report
+    assert "Property: P1 (Cluster C1)" in report
+    assert "Aspect: Food" in report
+    assert "Current Score: 2.6 | Cluster Mean: 3.8 | Gap: -1.2" in report
+    assert "Flag: Lag" in report
+    assert "Classification: property-specific" in report
+    assert "Changepoint: 2025-03-14 (decline)" in report
+    assert "Recommended Action:" in report
+    assert report.startswith("---")
+    assert report.endswith("---")
+

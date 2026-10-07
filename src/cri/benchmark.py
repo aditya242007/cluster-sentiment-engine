@@ -119,6 +119,91 @@ def benchmark_property(
     }
 
 
+def generate_action_report(benchmark_result: Dict[str, Any]) -> str:
+    """Generate a plain-text one-page action report for a property benchmark result.
+
+    Args:
+        benchmark_result: Dict with keys property_id, cluster_id, aspect, property_score,
+            cluster_mean, gap, flag, classification, and optional changepoint.
+
+    Returns:
+        str: Formatted plain-text action report readable in terminal (no emojis).
+    """
+    prop_id = benchmark_result.get("property_id", benchmark_result.get("Property", "N/A"))
+    cluster_id = benchmark_result.get("cluster_id", benchmark_result.get("Cluster", "N/A"))
+    aspect = benchmark_result.get("aspect", benchmark_result.get("Aspect", "N/A"))
+
+    prop_score = benchmark_result.get("property_score", benchmark_result.get("Current Score", 0.0))
+    cluster_mean = benchmark_result.get("cluster_mean", benchmark_result.get("Cluster Mean", 0.0))
+    gap = benchmark_result.get("gap", benchmark_result.get("Gap", 0.0))
+
+    flag = benchmark_result.get("flag", benchmark_result.get("Flag", "Neutral"))
+    classification = benchmark_result.get("classification", benchmark_result.get("Classification", "property-specific"))
+
+    raw_cp = benchmark_result.get("changepoint", benchmark_result.get("Changepoint", "None detected"))
+    if isinstance(raw_cp, dict):
+        cp_date = raw_cp.get("date", "N/A")
+        cp_dir = raw_cp.get("direction", "")
+        changepoint_str = f"{cp_date} ({cp_dir})" if cp_dir else str(cp_date)
+    else:
+        changepoint_str = str(raw_cp)
+
+    def fmt(val: Any) -> str:
+        if isinstance(val, float):
+            return f"{val:.1f}" if abs(val) >= 1.0 or val == 0.0 else f"{val:.2f}"
+        return str(val)
+
+    if flag == "Lag":
+        if classification == "property-specific":
+            rec = (
+                f"Your {aspect} sentiment has declined steadily and is now significantly below your cluster. "
+                f"This is a property-specific issue, not a market trend. Prioritize kitchen staff review and "
+                f"recipe consistency audits before next quarter."
+                if aspect == "Food" else
+                f"Your {aspect} sentiment has declined steadily and is now significantly below your cluster. "
+                f"This is a property-specific issue, not a market trend. Prioritize staff review and operational "
+                f"quality audits for {aspect} before next quarter."
+            )
+        else:
+            rec = (
+                f"Your {aspect} sentiment is lagging alongside the broader cluster trend. "
+                f"This indicates a market-wide shift in consumer sentiment. Benchmark regional competitors and "
+                f"adjust service standards for {aspect}."
+            )
+    elif flag == "Lead":
+        if classification == "property-specific":
+            rec = (
+                f"Your {aspect} performance is significantly outperforming cluster peers due to property-specific "
+                f"operational strengths. Maintain existing quality controls and highlight {aspect} in marketing campaigns."
+            )
+        else:
+            rec = (
+                f"Your {aspect} sentiment leads the cluster amidst positive market-wide demand. "
+                f"Continue capitalizing on regional momentum while reinforcing core service standards for {aspect}."
+            )
+    else:
+        rec = (
+            f"Your {aspect} sentiment aligns with cluster averages. "
+            f"Continue monitoring customer feedback for subtle shift patterns and maintain steady service delivery."
+        )
+
+    report = (
+        "---\n"
+        "ACTION REPORT\n"
+        f"Property: {prop_id} (Cluster {cluster_id})\n"
+        f"Aspect: {aspect}\n"
+        f"Current Score: {fmt(prop_score)} | Cluster Mean: {fmt(cluster_mean)} | Gap: {fmt(gap)}\n"
+        f"Flag: {flag}\n"
+        f"Classification: {classification}\n"
+        f"Changepoint: {changepoint_str}\n\n"
+        "Recommended Action:\n"
+        f"{rec}\n"
+        "---"
+    )
+
+    return report
+
+
 if __name__ == "__main__":
     # Test script on synthetic data
     from src.cri.loader import load_reviews
@@ -141,3 +226,7 @@ if __name__ == "__main__":
 
     benchmark_p1 = benchmark_property("P1", "C1", reviews_df, aspect="Food")
     print("\nBenchmark P1 (Injected Food Decline):\n", benchmark_p1)
+
+    print("\nAction Report for P1 Food:")
+    print(generate_action_report(benchmark_p1))
+
