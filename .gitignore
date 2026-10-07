@@ -1,45 +1,48 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-env/
-venv/
+*.pyc
+
+# Virtual environments
 .venv/
+venv/
 ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+env/
 
-# Jupyter / Notebooks
-.ipynb_checkpoints
-*/.ipynb_checkpoints/*
-
-# Environments & IDEs
+# Environment variables
 .env
 .env.*
 !.env.example
-.vscode/
+
+# Data directories (raw / synthetic datasets)
+data/raw/
+data/synthetic/
+
+# Output figures & reports
+figures/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE & Editor settings
 .idea/
+.vscode/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# Jupyter Notebooks
+*.ipynb_checkpoints/
+.ipynb_checkpoints/
 
 # Streamlit
 .streamlit/secrets.toml
