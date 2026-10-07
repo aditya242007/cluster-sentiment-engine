@@ -50,7 +50,6 @@ def load_reviews(filepath: str) -> pd.DataFrame:
             f"Required columns are: {', '.join(sorted(REQUIRED_COLUMNS))}"
         )
 
-    # Drop PII columns matching specified patterns
     pii_columns = [
         col for col in df.columns
         if any(pattern.match(col.strip()) for pattern in PII_COLUMN_PATTERNS)
@@ -58,7 +57,6 @@ def load_reviews(filepath: str) -> pd.DataFrame:
     if pii_columns:
         df = df.drop(columns=pii_columns)
 
-    # Parse date columns
     df["review_date"] = pd.to_datetime(df["review_date"])
     if "stay_date" in df.columns:
         df["stay_date"] = pd.to_datetime(df["stay_date"])

@@ -1,7 +1,6 @@
 import re
 from typing import Dict
 
-# Dictionary mapping common Hinglish (Romanized Hindi) words to standard English terms
 HINGLISH_MAP: Dict[str, str] = {
     "khana": "food",
     "khaana": "food",
@@ -37,7 +36,6 @@ HINGLISH_MAP: Dict[str, str] = {
     "barbad": "wasted",
 }
 
-# Common negation pairs mapping to unified canonical polar words
 NEGATION_MAP: Dict[str, str] = {
     r"\bnot\s+good\b": "bad",
     r"\bnot\s+clean\b": "dirty",
@@ -47,7 +45,6 @@ NEGATION_MAP: Dict[str, str] = {
     r"\bnot\s+helpful\b": "unhelpful",
 }
 
-# Regex matching emoji ranges (Unicode blocks for emoticons, symbols, transport, supplemental)
 EMOJI_PATTERN = re.compile(
     "["
     "\U0001F600-\U0001F64F"  # Emoticons
@@ -66,13 +63,7 @@ EMOJI_PATTERN = re.compile(
 def normalize_text(text: str) -> str:
     """Normalize raw review text across English, Hinglish, and Devanagari.
 
-    Order of Operations:
-      1. Lowercase text (preserves Devanagari characters untouched).
-      2. Remove emojis.
-      3. Detect Devanagari characters (U+0900 to U+097F) and retain intact.
-      4. Transliterate common Hinglish words to English equivalents.
-      5. Transform negation phrases (e.g., 'not good' -> 'bad', 'not clean' -> 'dirty').
-      6. Collapse whitespace.
+    Converts Hinglish and resolves negations to simplify downstream classification.
 
     Example:
       >>> normalize_text("Khana badhiya tha 😊 but room was not clean!")
@@ -87,28 +78,19 @@ def normalize_text(text: str) -> str:
     if not text:
         return ""
 
-    # 1. Lowercase text
     normalized = text.lower()
-
-    # 2. Remove emojis
     normalized = EMOJI_PATTERN.sub("", normalized)
 
-    # 3. Devanagari characters (U+0900 to U+097F) remain intact naturally during regex tokenization
-
-    # 4. Transliterate Hinglish words token-by-token (matching word boundaries)
     def replace_hinglish(match: re.Match) -> str:
         word = match.group(0)
         return HINGLISH_MAP.get(word, word)
 
-    # Regex matches words composed of ASCII letters/numbers or Devanagari Unicode range
     word_pattern = re.compile(r"\b[a-z0-9\u0900-\u097f]+\b", re.IGNORECASE)
     normalized = word_pattern.sub(replace_hinglish, normalized)
 
-    # 5. Handle negations
     for pattern, replacement in NEGATION_MAP.items():
         normalized = re.sub(pattern, replacement, normalized)
 
-    # 6. Collapse extra whitespace
     normalized = re.sub(r"\s+", " ", normalized).strip()
 
     return normalized

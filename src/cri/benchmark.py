@@ -58,12 +58,10 @@ def benchmark_property(
     if prop_df.empty:
         raise ValueError(f"No records found for property_id: '{property_id}' in cluster '{cluster_id}'")
 
-    # Overall current means
     prop_score = float(prop_df[aspect].mean())
     cluster_mean = float(cluster_df[aspect].mean())
     gap = prop_score - cluster_mean
 
-    # Lead / Lag / Neutral Flag
     if gap > 0.15:
         flag = "Lead"
     elif gap < -0.15:
@@ -71,7 +69,6 @@ def benchmark_property(
     else:
         flag = "Neutral"
 
-    # Compute monthly trends for slope comparison
     cluster_df["month"] = pd.to_datetime(cluster_df["review_date"]).dt.to_period("M")
     prop_monthly = prop_df.assign(month=pd.to_datetime(prop_df["review_date"]).dt.to_period("M"))
 
@@ -91,18 +88,13 @@ def benchmark_property(
         prop_slope = 0.0
         cluster_slope = 0.0
 
-    # Trend Classification:
-    # If both property and cluster slopes are declining (< -0.01), issue is market-wide.
-    # Otherwise if property is declining (< -0.01) while market is not, issue is property-specific.
     if prop_slope < -0.01 and cluster_slope < -0.01:
         classification = "market-wide"
     elif prop_slope < -0.01 and cluster_slope >= -0.01:
         classification = "property-specific"
     else:
-        # Default classification based on gap if slopes are flat/positive
         classification = "market-wide" if abs(gap) <= 0.15 else "property-specific"
 
-    # Calculate confidence based on sample size and slope stability
     n_samples = len(prop_df)
     confidence = float(min(1.0, max(0.5, n_samples / 100.0)))
 

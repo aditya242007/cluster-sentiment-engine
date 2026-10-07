@@ -1,9 +1,9 @@
 """Reproducible figure generation script for the Cluster Sentiment Engine.
 
 Generates 3 static figures in figures/:
-  1. figures/heatmap_cluster.png — Aspect sentiment heatmap across hotel properties.
-  2. figures/trend_p1_food.png — Property P1 Food sentiment trend over time with detected CUSUM changepoints.
-  3. figures/lead_lag_flags.png — Bar chart of competitive sentiment gaps (Lead/Lag/Neutral).
+  1. figures/heatmap_cluster.png: Aspect sentiment heatmap across hotel properties.
+  2. figures/trend_p1_food.png: Property P1 Food sentiment trend over time with detected CUSUM changepoints.
+  3. figures/lead_lag_flags.png: Bar chart of competitive sentiment gaps (Lead/Lag/Neutral).
 """
 
 import os
@@ -84,7 +84,6 @@ def generate_heatmap(df: pd.DataFrame, output_dir: str) -> None:
     ax.set_yticks(range(len(properties)))
     ax.set_yticklabels(properties, fontsize=10)
 
-    # Annotate score values inside cells
     for i in range(matrix.shape[0]):
         for j in range(matrix.shape[1]):
             val = matrix[i, j]
@@ -167,8 +166,6 @@ def generate_lead_lag_flags(df: pd.DataFrame, output_dir: str) -> dict:
 
     bench_df = pd.DataFrame(benchmark_results)
 
-    # Filter a balanced selection of property-aspect pairs for clear visualization
-    # Include injected pattern pairs (P1 Food, C2 Room, P4 Staff) and top leads/lags
     selected_bench = bench_df.sort_values(by="gap").iloc[::5].copy()
     if len(selected_bench) > 18:
         selected_bench = selected_bench.head(18)
@@ -222,7 +219,6 @@ def main() -> None:
     p1_cp_info = generate_p1_food_trend(df, output_dir)
     flag_counts = generate_lead_lag_flags(df, output_dir)
 
-    # Print summary of key findings to stdout
     print("\n" + "=" * 60)
     print("SUMMARY OF KEY FINDINGS & REPRODUCIBLE FIGURES")
     print("=" * 60)

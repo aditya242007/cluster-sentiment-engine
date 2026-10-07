@@ -1,7 +1,7 @@
 """Module defining the pluggable Classifier interface and rule-based classifier implementation.
 
 Future transformer-based backends (e.g., fine-tuned mBERT, XLM-RoBERTa) or hybrid model backends
-can implement the abstract `Classifier` interface, allowing seamless swapping of aspect-sentiment
+can implement the abstract `Classifier` interface, allowing swapping of aspect-sentiment
 engine models without modifying downstream analytics or dashboard components.
 """
 
@@ -51,7 +51,6 @@ class RuleBasedClassifier(Classifier):
         self.aspects: List[Dict[str, Any]] = data.get("aspects", [])
         self._compiled_rules: Dict[str, Dict[str, List[str]]] = {}
 
-        # Parse positive and negative cue phrases per aspect across all languages
         for aspect in self.aspects:
             name = aspect["name"]
             pos_phrases: List[str] = []

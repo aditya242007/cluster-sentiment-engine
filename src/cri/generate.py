@@ -122,16 +122,6 @@ ALL_ASPECTS: List[str] = list(TEMPLATES.keys())
 def generate_synthetic_reviews(n_reviews: int = 5000, seed: int = 42) -> pd.DataFrame:
     """Generate synthetic multilingual tourism reviews with ground-truth injected patterns.
 
-    Clusters and Properties:
-      - Cluster C1: P1, P2, P3, P4
-      - Cluster C2: P5, P6, P7, P8
-      - Cluster C3: P9, P10, P11, P12
-
-    Injected Patterns:
-      1. Property P1: Food sentiment declines steadily from month 1 to month 6.
-      2. Cluster C2 (P5-P8): Room sentiment dips in winter (Nov, Dec, Jan, Feb).
-      3. Property P4: Staff sentiment improves noticeably after month 3.
-
     Args:
         n_reviews: Number of reviews to generate.
         seed: Random seed for deterministic reproducibility.
@@ -166,44 +156,34 @@ def generate_synthetic_reviews(n_reviews: int = 5000, seed: int = 42) -> pd.Data
         stay_gap = int(rng.integers(0, 8))
         stay_date = review_date - timedelta(days=stay_gap)
 
-        # Baseline probability of positive sentiment across aspects
         pos_prob = 0.70
 
-        # Select primary aspect of review
         primary_aspect = rng.choice(ALL_ASPECTS)
 
-        # ---------------- Injected Pattern 1: P1 Food Sentiment Decline ----------------
         if prop_id == "P1" and primary_aspect == "Food":
             if month <= 6:
-                # Steeper decline month 1 (high positive) down to month 6 (mostly negative)
                 pos_prob = max(0.08, 0.90 - (month - 1) * 0.16)
             else:
                 pos_prob = 0.15
 
-        # ---------------- Injected Pattern 2: C2 Winter Room Sentiment Dip ------------
         if cluster_id == "C2" and primary_aspect == "Room":
-            # Winter months: Nov (11), Dec (12), Jan (1), Feb (2)
             if month in (11, 12, 1, 2):
                 pos_prob = 0.12
             else:
                 pos_prob = 0.75
 
-        # ---------------- Injected Pattern 3: P4 Staff Improvement --------------------
         if prop_id == "P4" and primary_aspect == "Staff":
             if month <= 3:
                 pos_prob = 0.20
             else:
                 pos_prob = 0.92
 
-        # Determine sentiment polarity based on adjusted probability
         is_positive = rng.random() < pos_prob
         polarity = "positive" if is_positive else "negative"
 
-        # Select template
         template_pool = TEMPLATES[primary_aspect][polarity]
         review_text = rng.choice(template_pool)
 
-        # Ratings loosely correlated with sentiment (Positive: 4-5, Negative: 1-2 with minor noise)
         if is_positive:
             rating = rng.choice([4.0, 5.0, 5.0, 4.0, 3.0], p=[0.35, 0.45, 0.10, 0.05, 0.05])
         else:
@@ -222,7 +202,6 @@ def generate_synthetic_reviews(n_reviews: int = 5000, seed: int = 42) -> pd.Data
         })
 
     df = pd.DataFrame(records)
-    # Sort chronologically by review_date
     df = df.sort_values(by="review_date").reset_index(drop=True)
     return df
 
