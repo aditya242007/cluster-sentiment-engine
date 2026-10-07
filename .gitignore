@@ -16,11 +16,14 @@ env/
 !.env.example
 
 # Data directories (raw / synthetic datasets)
-data/raw/
-data/synthetic/
+data/raw/*
+!data/raw/.gitkeep
+data/synthetic/*
+!data/synthetic/.gitkeep
 
 # Output figures & reports
-figures/
+figures/*
+!figures/.gitkeep
 
 # Testing & coverage
 .pytest_cache/
